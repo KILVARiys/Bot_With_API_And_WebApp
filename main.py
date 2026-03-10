@@ -8,8 +8,8 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-TOKEN = '8705753732:AAFn8WdjbJSmauCyVc4xKxrw6He73pvcPM8'
-API_TOKEN = '3c1d78de89bef8c049f324d0a88f3899'
+TOKEN = 'YOUR_TOKEN'
+API_TOKEN = 'YOUR_TOKEN'
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
