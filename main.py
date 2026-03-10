@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 import logging
 
+from urllib.parse import quote
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command, CommandStart
@@ -35,6 +36,7 @@ async def weather_command(message: types.Message, state: FSMContext):
 async def get_city(message: types.Message, state: FSMContext):
     city = message.text
     weather_info_from_site = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_TOKEN}&units=metric&lang=ru'
+    
     async with aiohttp.ClientSession() as session:
         async with session.get(weather_info_from_site) as response:
             if response.status == 200:
@@ -43,25 +45,34 @@ async def get_city(message: types.Message, state: FSMContext):
                 content = data['weather'][0]['description']
                 temp_real = data['main']['feels_like']
                 wind = data['wind']['speed']
-
-                keyboard = InlineKeyboardMarkup(webapp_button = InlineKeyboardButton(
-                    text="Посмотреть погоду в WebApp",
-                    web_app=WebAppInfo(url="https://твой-сайт.com/weather.html?city={city}&temp={temp}&content={content}&temp_real={temp_real}&wind={wind}")
-                ))
+                
+                encoded_city = quote(city)
+                encoded_content = quote(content)
+                
+                web_app_url = f"https://kilvariys.github.io/Bot_With_API_And_WebApp/?city={encoded_city}&temp={temp}&desc={encoded_content}&feels={temp_real}&wind={wind}"
+                
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[
+                        [InlineKeyboardButton(
+                            text="🌤 Посмотреть погоду в WebApp",
+                            web_app=WebAppInfo(url=web_app_url)
+                        )]
+                    ]
+                )
+                
+                await message.answer(
+                    f'''
+                        Погода в городе - {city}:
+                        Температура - {temp}°C
+                        Ощущается как - {temp_real}°C
+                        Скорость ветра - {wind} м/с
+                        Описание - {content}
+                    ''',
+                    reply_markup=keyboard
+                )
             else:
-                message.answer('Город не найден')
-
-    await message.answer(
-        f'''
-        Погода в городе - {city}:
-        Температура - {temp}
-        Ощущается как - {temp_real}
-        Скорость ветра - {wind}
-        Описание - {content}
-        ''',
-        reply_markup=keyboard
-        )
-        
+                await message.answer('Город не найден. Попробуйте еще раз.')
+    
     await state.clear()
 
 async def main():
